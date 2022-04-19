@@ -1,0 +1,64 @@
+grammar dk.sdu.mmmi.mdsd.Math with org.eclipse.xtext.common.Terminals
+generate math "http://www.sdu.dk/mmmi/mdsd/Math"
+
+DomainModel:
+	"\n" element=Class
+;
+
+Class:
+	'program' name=ID
+	("\n" (externals+=External("\n" externals+=External)*))?
+	("\n" math=MathExp)?
+;
+
+External:
+	'external' name=ID '(' parameters+=DataTypes? ')'
+;
+
+DataTypes:
+	 ID (',' ID)* 
+;
+
+MathExp:
+	variables+=VarBinding("\n"variables+=VarBinding)*
+;
+
+VarBinding:
+	('var' name=ID '=' expression=Exp)
+;
+
+Exp returns Expression:
+	Factor (( {Plus.left=current} '+' | {Minus.left=current}  '-' ) right=Factor)*
+;
+
+Factor returns Expression:
+	Primary (({Mult.left=current} '*' | {Div.left=current}  '/'  ) right=Primary)*
+;
+
+Primary returns Expression:
+	{MathNumber} value=INT  | Parenthesis |  VariableUse | LetBinding | ExternalBinding
+;
+
+Parenthesis:
+	'(' exp=Exp ')'
+;
+
+LetBinding:
+	'let' name=ID '=' binding=Exp 'in' body=Exp 'end'
+;
+
+
+ExternalBinding:
+	ref=[External] '(' (parameters+=Exp (',' parameters+=Exp)*)? ')'
+;
+
+
+Binding:
+	VarBinding | LetBinding 
+;
+
+VariableUse:
+	ref = [Binding]
+;
+
+
